@@ -26,6 +26,37 @@ class restApiController:
         self.exec_command()
 
 
+    def get_player_list(self):  
+        self.payload = {}
+        self.headers = {
+            'Accept': 'application/json'
+            }
+        self.method = "GET"
+        self.urll = "players"
+        jres = self.exec_command()
+        
+        for i in range(len(jres['players'])):
+            yield jres['players'][i]['accountName']
+
+
+    def show_info(self, urll, text):
+        self.payload = {}
+        self.headers = {
+            'Content-Type': 'application/json'
+            }
+        self.method = "GET"
+        self.urll = urll
+        jres = self.exec_command()
+        
+        text = "```" + text + ":"
+        for key, value in jres.items():
+            text += '\n  ' + f'{key}: {value}'
+
+        text += '```'
+
+        return text
+        
+
     def exec_command(self):
         try:
             response = requests.request(

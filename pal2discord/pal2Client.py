@@ -1,6 +1,6 @@
 from os import getenv
 from discord import Client, Intents, Interaction
-from discord.ext import tasks
+from discord.ext import tasks, commands
 from discord.app_commands import (
     CommandTree,
     allowed_installs, guild_install, user_install,
@@ -8,9 +8,9 @@ from discord.app_commands import (
 )
 from pal2discord.logManager import logManager
 from pal2discord.restApiController import restApiController
+from pal2discord.MyCog import MyCog
 
-
-class pal2Client(Client):
+class pal2Client(commands.Bot):
     def __init__(self, 
             log_path, svc_name, cha_id,
             port, user, passwd
@@ -18,22 +18,25 @@ class pal2Client(Client):
 
         intents = Intents.default()
         intents.message_content = True 
-        super().__init__(intents=intents)
+        super().__init__(
+            command_prefix="!",  
+            case_insensitive=True,
+            intents=intents
+        )
         
-        self.tree = CommandTree(self)
         self.channel_id = cha_id
         self.logManager = logManager(log_path, svc_name)
         self.rAController = restApiController(port, user, passwd)
 
-        
+
     async def setup_hook(self) -> None:
         await self.tree.sync()
+        await self.add_cog(MyCog(self))
 
 
     async def on_ready(self):
         print(f'Logged on as {self.user}')
         channel = self.get_channel(self.channel_id)
-        #await channel.send('パルワールドサーバが起動しました！')
         self.log_loop.start()
 
 
@@ -42,6 +45,7 @@ class pal2Client(Client):
             return
         
         self.rAController.send_msg(message.author.display_name, message.content)
+        await self.process_commands(message)
 
 
     @tasks.loop(seconds=1)
@@ -50,5 +54,4 @@ class pal2Client(Client):
         if msg:
             channel = self.get_channel(self.channel_id)
             await channel.send(msg)
-
 
