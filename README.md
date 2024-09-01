@@ -20,3 +20,4 @@ $ vi settings.ini
 Run ```$ python run.py```
 
 
+More details https://qiita.com/yuxu1226/items/c58fb214fbceb28a96ea
